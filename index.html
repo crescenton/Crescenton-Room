@@ -646,7 +646,9 @@
             // Initiate WebRTC meeting
             try {
                 jitsiAPIInstance = new JitsiMeetExternalAPI(domain, options);
-
+setTimeout(() => {
+    document.getElementById('jitsi-loading').style.display = 'none';
+}, 5000);
                 // API Event callbacks
                 jitsiAPIInstance.addEventListener('videoConferenceJoined', () => {
                     document.getElementById('jitsi-loading').style.display = 'none';
