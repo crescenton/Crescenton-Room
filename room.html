@@ -1,0 +1,980 @@
+```html
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRESCENTON Live Classroom</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Jitsi Meet External API -->
+    <script src="https://meet.jit.si/external_api.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        outfit: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#2563eb', // Primary
+                            600: '#1d4ed8',
+                            700: '#1e40af', // Secondary
+                            800: '#1e3a8a',
+                            950: '#030712'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Pulse animation for Live meeting indicator */
+        @keyframes pulse-red {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.5; }
+        }
+        .pulse-live {
+            animation: pulse-red 2s infinite ease-in-out;
+        }
+
+        /* Seamless layout transitions */
+        .fade-in {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="font-sans text-slate-800 flex flex-col min-h-screen">
+
+    <!-- Global Navigation Header -->
+    <header id="main-header" class="bg-gradient-to-r from-brand-700 via-brand-600 to-indigo-800 text-white shadow-md transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="goToDashboard()">
+                <div class="bg-white text-brand-600 p-2.5 rounded-xl shadow-inner flex items-center justify-center">
+                    <i data-lucide="video" class="w-6 h-6 stroke-[2.5]"></i>
+                </div>
+                <div>
+                    <h1 class="font-outfit font-extrabold text-xl tracking-tight sm:text-2xl leading-none">CRESCENTON</h1>
+                    <span class="text-xs text-brand-100 font-medium uppercase tracking-widest block mt-0.5">Live Classroom</span>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <a href="#" onclick="goToDashboard()" class="text-sm font-semibold hover:text-brand-100 transition flex items-center space-x-1">
+                    <i data-lucide="home" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">Home</span>
+                </a>
+                <span class="h-4 w-px bg-brand-500"></span>
+                <span id="header-status" class="flex items-center space-x-1.5 text-xs bg-brand-800/60 border border-brand-500/30 px-3 py-1.5 rounded-full text-brand-200">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                    <span>Ready to host</span>
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 transition-all duration-300">
+        
+        <!-- ================= SECTION 1: TEACHER DASHBOARD ================= -->
+        <section id="dashboard-section" class="fade-in space-y-8">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                
+                <!-- Create Classroom Card (Col 7) -->
+                <div class="lg:col-span-7 bg-white rounded-3xl shadow-sm border border-slate-100 p-6 sm:p-8 space-y-6">
+                    <div>
+                        <span class="text-xs font-bold text-brand-500 uppercase tracking-widest bg-brand-50 px-3 py-1.5 rounded-full">Educator Portal</span>
+                        <h2 class="font-outfit text-2xl sm:text-3xl font-bold mt-3 text-slate-900">Set Up Your Virtual Classroom</h2>
+                        <p class="text-slate-500 mt-1 text-sm sm:text-base">Launch an interactive, secure live video classroom with one click.</p>
+                    </div>
+
+                    <form id="create-classroom-form" class="space-y-5" onsubmit="handleCreateClassroom(event)">
+                        <!-- Room Name -->
+                        <div class="space-y-2">
+                            <label for="room-name" class="block text-sm font-semibold text-slate-700">Classroom Topic / Room Name <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                                    <i data-lucide="presentation" class="w-5 h-5"></i>
+                                </span>
+                                <input type="text" id="room-name" required placeholder="e.g. Grade 10 Calculus, Chemistry Lab" 
+                                    class="w-full pl-10 pr-24 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all text-slate-800 placeholder-slate-400 font-medium">
+                                <button type="button" onclick="generateRandomRoomName()" class="absolute right-2 top-2 px-3 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-xs font-semibold transition-all">
+                                    Auto Generate
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Toggle Password Protection -->
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="bg-blue-100 text-brand-600 p-2 rounded-lg">
+                                    <i data-lucide="shield-alert" class="w-5 h-5"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-sm font-bold text-slate-800">Password Gatekeeper</h4>
+                                    <p class="text-xs text-slate-500">Require students to authenticate before entry</p>
+                                </div>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="enable-password-checkbox" onchange="togglePasswordFields()" class="sr-only peer">
+                                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-500"></div>
+                            </label>
+                        </div>
+
+                        <!-- Password Fields (Hidden by default) -->
+                        <div id="password-container" class="hidden space-y-2 transition-all duration-300">
+                            <label for="room-password" class="block text-sm font-semibold text-slate-700">Classroom Password</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                                    <i data-lucide="lock" class="w-5 h-5"></i>
+                                </span>
+                                <input type="text" id="room-password" placeholder="Define a secure classroom password" 
+                                    class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all text-slate-800 font-medium">
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" class="w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg shadow-brand-500/20 hover:shadow-brand-500/30 transform hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center space-x-2">
+                            <i data-lucide="plus-circle" class="w-5 h-5"></i>
+                            <span>Create Classroom Link</span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Recent Classrooms / History (Col 5) -->
+                <div class="lg:col-span-5 flex flex-col bg-white rounded-3xl shadow-sm border border-slate-100 p-6 sm:p-8 space-y-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="font-outfit text-xl font-bold text-slate-900">Classroom History</h3>
+                            <p class="text-slate-500 text-xs">Access past classrooms and links</p>
+                        </div>
+                        <button onclick="clearHistory()" class="text-xs font-bold text-rose-500 hover:text-rose-600 hover:underline transition">
+                            Clear All
+                        </button>
+                    </div>
+
+                    <!-- History Items Container -->
+                    <div id="history-container" class="flex-grow space-y-3 overflow-y-auto max-h-[310px] pr-1">
+                        <!-- Dynamically filled. Fallback shown if empty. -->
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ================= SECTION 2: CLASSROOM CREATED DETAILS ================= -->
+        <section id="created-section" class="hidden fade-in max-w-2xl mx-auto">
+            <div class="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
+                <!-- Successful Card Header -->
+                <div class="bg-gradient-to-br from-emerald-500 to-teal-600 p-8 text-white text-center relative">
+                    <div class="mx-auto w-16 h-16 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center mb-4">
+                        <i data-lucide="sparkles" class="w-8 h-8 text-white"></i>
+                    </div>
+                    <h2 class="font-outfit text-2xl sm:text-3xl font-extrabold">Classroom Configured!</h2>
+                    <p class="text-emerald-100 text-sm mt-1">Your secure invitation links are compiled and ready.</p>
+                </div>
+
+                <div class="p-6 sm:p-8 space-y-6">
+                    <!-- Config Detail Table -->
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                            <span class="text-sm font-medium text-slate-500">Room Name</span>
+                            <span id="created-room-title" class="text-base font-bold text-slate-800">Grade 10 Calculus</span>
+                        </div>
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                            <span class="text-sm font-medium text-slate-500">Gatekeeper Protection</span>
+                            <span id="created-room-protection" class="text-xs font-bold text-slate-800 bg-slate-100 px-2.5 py-1 rounded-full flex items-center space-x-1">
+                                <!-- Filled by JS -->
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Invite Box -->
+                    <div class="bg-slate-50 rounded-2xl p-5 border border-slate-200/60 space-y-3">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Shareable Student URL</label>
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <input type="text" id="shareable-link-input" readonly 
+                                class="flex-grow bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 font-mono focus:outline-none">
+                            <div class="flex gap-2">
+                                <button onclick="copyInviteLink()" class="flex-1 sm:flex-initial bg-white border border-slate-200 hover:border-slate-300 text-slate-700 font-bold px-4 py-3 rounded-xl transition flex items-center justify-center space-x-1.5 shadow-sm active:bg-slate-100">
+                                    <i data-lucide="copy" class="w-4 h-4"></i>
+                                    <span>Copy</span>
+                                </button>
+                                <button onclick="shareInviteLink()" class="flex-1 sm:flex-initial bg-brand-50 hover:bg-brand-100 text-brand-600 font-bold px-4 py-3 rounded-xl transition flex items-center justify-center space-x-1.5 border border-brand-200 active:bg-brand-200/50">
+                                    <i data-lucide="share-2" class="w-4 h-4"></i>
+                                    <span>Share</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Start Classroom Actions -->
+                    <div class="flex flex-col sm:flex-row gap-3 pt-2">
+                        <button onclick="goToDashboard()" class="w-full sm:w-1/3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-4 px-5 rounded-xl transition flex items-center justify-center space-x-2">
+                            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                            <span>Go Back</span>
+                        </button>
+                        <button onclick="launchClassroom('moderator')" class="w-full sm:w-2/3 bg-brand-500 hover:bg-brand-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg shadow-brand-500/20 transform hover:-translate-y-0.5 active:translate-y-0 transition flex items-center justify-center space-x-2">
+                            <i data-lucide="video" class="w-5 h-5"></i>
+                            <span>Start Class (As Teacher)</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SECTION 3: STUDENT JOIN GATEWAY ================= -->
+        <section id="join-section" class="hidden fade-in max-w-md mx-auto">
+            <div class="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
+                <!-- Header -->
+                <div class="bg-gradient-to-r from-brand-600 to-indigo-700 p-8 text-white text-center">
+                    <div class="inline-flex p-3 bg-white/10 rounded-2xl mb-3">
+                        <i data-lucide="sparkles" class="w-8 h-8 text-brand-100"></i>
+                    </div>
+                    <h2 class="font-outfit text-2xl font-extrabold">Join Live Classroom</h2>
+                    <p class="text-brand-100 text-xs mt-1 uppercase tracking-widest font-bold">Crescenton Live Network</p>
+                </div>
+
+                <!-- Form -->
+                <form id="student-join-form" onsubmit="handleStudentJoin(event)" class="p-6 sm:p-8 space-y-5">
+                    <!-- Classroom name displayed read-only -->
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 text-center">
+                        <p class="text-xs text-slate-500 font-medium">Invited to join classroom</p>
+                        <h3 id="invited-classroom-name" class="text-lg font-extrabold text-slate-800 mt-0.5">Calculus AP</h3>
+                    </div>
+
+                    <!-- Participant Name -->
+                    <div class="space-y-1.5">
+                        <label for="student-name" class="block text-sm font-semibold text-slate-700">Your Full Name <span class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                                <i data-lucide="user" class="w-5 h-5"></i>
+                            </span>
+                            <input type="text" id="student-name" required placeholder="Enter name for class attendance" 
+                                class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all text-slate-800 font-medium">
+                        </div>
+                    </div>
+
+                    <!-- Password Verification (Rendered Dynamically) -->
+                    <div id="join-password-container" class="hidden space-y-1.5">
+                        <div class="flex items-center justify-between">
+                            <label for="student-password" class="text-sm font-semibold text-slate-700">Class Password</label>
+                            <span class="text-xs font-bold text-red-500 flex items-center gap-1">
+                                <i data-lucide="lock" class="w-3 h-3"></i> Required
+                            </span>
+                        </div>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                                <i data-lucide="key" class="w-5 h-5"></i>
+                            </span>
+                            <input type="password" id="student-password" placeholder="Enter security key to proceed" 
+                                class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all text-slate-800 font-medium">
+                        </div>
+                    </div>
+
+                    <!-- Action buttons -->
+                    <div class="pt-2 space-y-3">
+                        <button type="submit" class="w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg shadow-brand-500/20 transform hover:-translate-y-0.5 active:translate-y-0 transition flex items-center justify-center space-x-2">
+                            <i data-lucide="video" class="w-5 h-5"></i>
+                            <span>Join Classroom Lobby</span>
+                        </button>
+                        <button type="button" onclick="goToDashboard()" class="w-full text-xs font-semibold text-slate-500 hover:text-slate-700 text-center block py-1">
+                            Cancel & Go To Dashboard
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ================= SECTION 4: FULL-SCREEN VIDEO CLASSROOM ================= -->
+    <section id="meeting-section" class="hidden fixed inset-0 z-50 bg-slate-900 flex flex-col">
+        <!-- Floating Meeting Control Header -->
+        <div class="bg-slate-900 text-white border-b border-slate-800 px-4 py-3 flex items-center justify-between shadow-lg">
+            <div class="flex items-center space-x-3">
+                <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-rose-600 text-white">
+                    <span class="w-2.5 h-2.5 rounded-full bg-white pulse-live"></span>
+                </span>
+                <div>
+                    <h3 id="active-meeting-title" class="font-outfit font-bold text-sm sm:text-base leading-none">Mathematics - Session 4</h3>
+                    <span id="active-meeting-role" class="text-[10px] text-slate-400 font-medium uppercase tracking-wider block mt-1">Moderator Mode</span>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-2">
+                <!-- Info Button -->
+                <button onclick="toggleInfoSidebar()" class="p-2 text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition" title="Classroom details">
+                    <i data-lucide="info" class="w-5 h-5"></i>
+                </button>
+                <!-- Leave Button -->
+                <button onclick="leaveActiveMeeting()" class="bg-rose-600 hover:bg-rose-700 text-white font-bold px-4 py-2 rounded-lg text-sm transition flex items-center space-x-1 shadow-md">
+                    <i data-lucide="log-out" class="w-4 h-4"></i>
+                    <span>Leave</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="flex-grow flex relative">
+            <!-- Jitsi Embed Canvas -->
+            <div id="meet-iframe-container" class="flex-grow h-full bg-slate-950">
+                <!-- Jitsi Meet iframe gets inserted dynamically here -->
+                <div id="jitsi-loading" class="absolute inset-0 flex flex-col items-center justify-center text-white bg-slate-950 space-y-4">
+                    <div class="relative w-16 h-16">
+                        <div class="absolute inset-0 border-4 border-slate-800 rounded-full"></div>
+                        <div class="absolute inset-0 border-4 border-brand-500 rounded-full border-t-transparent animate-spin"></div>
+                    </div>
+                    <p class="text-sm font-semibold tracking-wide text-slate-400">Negotiating handshake with Jitsi Live Server...</p>
+                </div>
+                <div id="meet" class="w-full h-full"></div>
+            </div>
+
+            <!-- Dynamic Sliding Sidebar for Room Details inside Meeting -->
+            <div id="info-sidebar" class="hidden lg:flex flex-col w-80 bg-slate-900 border-l border-slate-800 text-white p-6 justify-between transition-all duration-300 absolute lg:static right-0 top-0 bottom-0 z-10 shadow-2xl lg:shadow-none">
+                <div class="space-y-6">
+                    <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+                        <h4 class="font-outfit font-bold text-lg">Classroom Info</h4>
+                        <button onclick="toggleInfoSidebar()" class="lg:hidden text-slate-400 hover:text-white">
+                            <i data-lucide="x" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+
+                    <div class="space-y-4 text-sm">
+                        <div>
+                            <span class="text-slate-400 text-xs block font-bold uppercase tracking-widest">Active Lesson</span>
+                            <span id="sidebar-room-name" class="text-base font-semibold text-white mt-1 block">Maths with Dr. Smith</span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 text-xs block font-bold uppercase tracking-widest">Client Portal Link</span>
+                            <input type="text" id="sidebar-share-input" readonly class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs font-mono text-slate-300 mt-2 focus:outline-none">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-3 pt-6 border-t border-slate-800">
+                    <button onclick="copyMeetingLink('sidebar-share-input')" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition flex items-center justify-center space-x-1.5 border border-slate-700">
+                        <i data-lucide="copy" class="w-4 h-4"></i>
+                        <span>Copy Invitation</span>
+                    </button>
+                    <button onclick="shareInviteLink()" class="w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition flex items-center justify-center space-x-1.5 shadow-md shadow-brand-500/10">
+                        <i data-lucide="share-2" class="w-4 h-4"></i>
+                        <span>Broadcast Class URL</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Global Footer -->
+    <footer id="main-footer" class="bg-slate-100 border-t border-slate-200 py-6 mt-12 transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-slate-500 text-xs sm:text-sm space-y-2">
+            <p class="font-outfit font-semibold text-slate-700">CRESCENTON Live Video Environment</p>
+            <p>Engineered via secure WebRTC technologies powered by the free Jitsi Meet Service.</p>
+        </div>
+    </footer>
+
+    <!-- Custom Floating Toast Notifications -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 space-y-2 max-w-sm pointer-events-none"></div>
+
+    <!-- Dynamic JavaScript Logic -->
+    <script>
+        // Global State variables
+        let currentRoomData = null;
+        let jitsiAPIInstance = null;
+
+        // Custom list of pre-configured random room tags for auto-generation
+        const sampleSubjectPrefixes = [
+            'Maths-Algebra', 'Physics-Newton', 'Bio-Genetics', 'English-Literature',
+            'Chem-Catalyst', 'Hist-Industrial', 'CS-Python', 'Art-Design'
+        ];
+
+        // Initialization lifecycle
+        window.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            checkUrlRoute();
+            renderClassroomHistory();
+        });
+
+        // Handles switching states depending on incoming search query arguments
+        function checkUrlRoute() {
+            const params = new URLSearchParams(window.location.search);
+            const targetRoomName = params.get('room');
+
+            if (targetRoomName) {
+                // Route detected: Setup Student Join Portal
+                showSection('join-section');
+                hideHeaderFooter(false);
+                
+                // Read configurations
+                document.getElementById('invited-classroom-name').innerText = decodeURIComponent(targetRoomName);
+                
+                const requirePassword = params.get('reqPwd') === 'true';
+                const passwordField = document.getElementById('join-password-container');
+                
+                if (requirePassword) {
+                    passwordField.classList.remove('hidden');
+                    document.getElementById('student-password').required = true;
+                } else {
+                    passwordField.classList.add('hidden');
+                    document.getElementById('student-password').required = false;
+                }
+                
+                // Focus student name on load
+                setTimeout(() => document.getElementById('student-name').focus(), 300);
+            } else {
+                // Default: Dashboard Portal
+                showSection('dashboard-section');
+                hideHeaderFooter(false);
+                generateRandomRoomName(); // Populate dynamic default
+            }
+        }
+
+        // Toggle Password Fields visually
+        function togglePasswordFields() {
+            const isChecked = document.getElementById('enable-password-checkbox').checked;
+            const container = document.getElementById('password-container');
+            const passwordInput = document.getElementById('room-password');
+            
+            if (isChecked) {
+                container.classList.remove('hidden');
+                passwordInput.required = true;
+                passwordInput.focus();
+            } else {
+                container.classList.add('hidden');
+                passwordInput.required = false;
+                passwordInput.value = '';
+            }
+        }
+
+        // Generate clean random alphanumeric-hyphen room name
+        function generateRandomRoomName() {
+            const randomPrefix = sampleSubjectPrefixes[Math.floor(Math.random() * sampleSubjectPrefixes.length)];
+            const randomNum = Math.floor(100 + Math.random() * 900);
+            document.getElementById('room-name').value = `${randomPrefix}-${randomNum}`;
+        }
+
+        // Return current application landing domain
+        function getAppBaseUrl() {
+            return window.location.origin + window.location.pathname;
+        }
+
+        // Generate invitation URLs
+        function createInviteLink(roomName, password) {
+            const baseUrl = getAppBaseUrl();
+            const params = new URLSearchParams();
+            params.set('room', roomName);
+            if (password && password.trim() !== '') {
+                params.set('reqPwd', 'true');
+                // Use robust UTF-8 safe base64 encoding
+                const encodedPwd = btoa(encodeURIComponent(password.trim()));
+                params.set('pHash', encodedPwd);
+            }
+            return `${baseUrl}?${params.toString()}`;
+        }
+
+        // Teacher: Creates classroom configuration
+        function handleCreateClassroom(event) {
+            event.preventDefault();
+            
+            const rawRoomName = document.getElementById('room-name').value.trim();
+            const isPasswordProtected = document.getElementById('enable-password-checkbox').checked;
+            const passwordValue = isPasswordProtected ? document.getElementById('room-password').value.trim() : '';
+
+            if (!rawRoomName) {
+                showToast('Room name is required!', 'error');
+                return;
+            }
+
+            // Sanitize room name to be safe for Jitsi URL formats
+            const sanitizedRoomName = rawRoomName.replace(/[^a-zA-Z0-9-_]/g, '-');
+            const invitationLink = createInviteLink(sanitizedRoomName, passwordValue);
+
+            // Store current room configuration inside localized scope
+            currentRoomData = {
+                roomName: sanitizedRoomName,
+                password: passwordValue,
+                shareLink: invitationLink,
+                isProtected: isPasswordProtected
+            };
+
+            // Save configuration inside system localStorage history
+            saveToHistory(currentRoomData);
+
+            // Update UI fields
+            document.getElementById('created-room-title').innerText = sanitizedRoomName;
+            
+            const protectionBadge = document.getElementById('created-room-protection');
+            if (isPasswordProtected) {
+                protectionBadge.className = "text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full flex items-center gap-1";
+                protectionBadge.innerHTML = `<i data-lucide="lock" class="w-3.5 h-3.5"></i> Protected`;
+            } else {
+                protectionBadge.className = "text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full flex items-center gap-1";
+                protectionBadge.innerHTML = `<i data-lucide="unlock" class="w-3.5 h-3.5"></i> Open Entry`;
+            }
+            
+            document.getElementById('shareable-link-input').value = invitationLink;
+
+            // Re-render icons
+            lucide.createIcons();
+
+            // Slide View
+            showSection('created-section');
+            showToast('Classroom successfully configured!', 'success');
+        }
+
+        // Student Join authentication gateway
+        function handleStudentJoin(event) {
+            event.preventDefault();
+            
+            const studentName = document.getElementById('student-name').value.trim();
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetRoomName = urlParams.get('room');
+            const requirePassword = urlParams.get('reqPwd') === 'true';
+            const expectedHash = urlParams.get('pHash');
+
+            if (!studentName) {
+                showToast('Please insert your name to continue.', 'error');
+                return;
+            }
+
+            if (requirePassword) {
+                const enteredPassword = document.getElementById('student-password').value.trim();
+                let isValid = false;
+                try {
+                    const decodedPassword = decodeURIComponent(atob(expectedHash));
+                    if (enteredPassword === decodedPassword) {
+                        isValid = true;
+                    }
+                } catch(err) {
+                    isValid = false;
+                }
+
+                if (!isValid) {
+                    showToast('Incorrect access code or password.', 'error');
+                    return;
+                }
+            }
+
+            // Successfully authenticated
+            currentRoomData = {
+                roomName: targetRoomName,
+                displayName: studentName,
+                role: 'student'
+            };
+
+            // Launch active Jitsi Frame
+            launchClassroom('student');
+        }
+
+        // Jitsi Meeting Embed Initiation
+        function launchClassroom(userRole) {
+            if (!currentRoomData || !currentRoomData.roomName) {
+                showToast('Initialization error: No room found.', 'error');
+                return;
+            }
+
+            // Show active meeting portal
+            showSection('meeting-section');
+            hideHeaderFooter(true);
+
+            // Configure dynamic Header info
+            const meetingTitle = currentRoomData.roomName;
+            document.getElementById('active-meeting-title').innerText = meetingTitle;
+            document.getElementById('sidebar-room-name').innerText = meetingTitle;
+            
+            const roleIndicator = document.getElementById('active-meeting-role');
+            if (userRole === 'moderator') {
+                roleIndicator.innerText = 'Host Mode (Teacher)';
+                roleIndicator.className = 'text-[10px] text-emerald-400 font-bold uppercase tracking-wider block mt-1';
+            } else {
+                roleIndicator.innerText = `Student Attendance: ${currentRoomData.displayName}`;
+                roleIndicator.className = 'text-[10px] text-brand-400 font-bold uppercase tracking-wider block mt-1';
+            }
+
+            // Assemble invite string inside info-sidebar inside active portal
+            const portalInviteUrl = currentRoomData.shareLink || createInviteLink(currentRoomData.roomName, currentRoomData.password || '');
+            document.getElementById('sidebar-share-input').value = portalInviteUrl;
+
+            // Clear old meeting frame
+            const container = document.getElementById('meet');
+            container.innerHTML = '';
+            document.getElementById('jitsi-loading').style.display = 'flex';
+
+            // Configure dynamic displayName options
+            const displayName = userRole === 'moderator' ? 'Instructor (Teacher)' : (currentRoomData.displayName || 'Guest Student');
+
+            // Instantiating Jitsi API Options
+            const domain = 'meet.jit.si';
+            const options = {
+                roomName: `CRESCENTON-${currentRoomData.roomName}`,
+                width: '100%',
+                height: '100%',
+                parentNode: container,
+                userInfo: {
+                    displayName: displayName
+                },
+                configOverwrite: {
+                    startWithAudioMuted: false,
+                    startWithVideoMuted: false,
+                    prejoinPageEnabled: false, // Bypass secondary Jitsi prejoin
+                    requireDisplayName: false,
+                    enableWelcomePage: false,
+                    disableThirdPartyRequests: true
+                },
+                interfaceConfigOverwrite: {
+                    MOBILE_APP_PROMPT: false, // Prevents redirection app prompts on mobile browsers
+                    TOOLBAR_BUTTONS: [
+                        'microphone', 'camera', 'closedcaptions', 'desktop', 'fullscreen',
+                        'fodeviceselection', 'hangup', 'profile', 'chat', 'recording',
+                        'livestreaming', 'etherpad', 'sharedvideo', 'settings', 'raisehand',
+                        'videoquality', 'filmstrip', 'invite', 'feedback', 'stats', 'shortcuts',
+                        'tileview', 'videobackgroundblur', 'download', 'help', 'mute-everyone',
+                        'security'
+                    ],
+                }
+            };
+
+            // Initiate WebRTC meeting
+            try {
+                jitsiAPIInstance = new JitsiMeetExternalAPI(domain, options);
+
+                // API Event callbacks
+                jitsiAPIInstance.addEventListener('videoConferenceJoined', () => {
+                    document.getElementById('jitsi-loading').style.display = 'none';
+                    showToast('Connected to live classroom network.', 'success');
+                });
+
+                jitsiAPIInstance.addEventListener('readyToClose', () => {
+                    leaveActiveMeeting();
+                });
+            } catch (err) {
+                document.getElementById('jitsi-loading').style.display = 'none';
+                showToast('Failed to start Jitsi. Use a supported modern browser.', 'error');
+            }
+        }
+
+        // Terminate and exit active video room
+        function leaveActiveMeeting() {
+            if (jitsiAPIInstance) {
+                jitsiAPIInstance.dispose();
+                jitsiAPIInstance = null;
+            }
+
+            // Redirect to home dashboard
+            goToDashboard();
+            showToast('Classroom session exited.', 'info');
+        }
+
+        // Navigate clean back to default Dashboard section
+        function goToDashboard() {
+            // Clean browser address bar of url parameter query strings
+            window.history.pushState({}, document.title, window.location.pathname);
+            
+            showSection('dashboard-section');
+            hideHeaderFooter(false);
+            
+            // Clean forms
+            document.getElementById('create-classroom-form').reset();
+            document.getElementById('enable-password-checkbox').checked = false;
+            togglePasswordFields();
+            generateRandomRoomName();
+            
+            // Refresh storage history view
+            renderClassroomHistory();
+        }
+
+        // Helper: toggles HTML page container view visibility
+        function showSection(sectionId) {
+            const sections = ['dashboard-section', 'created-section', 'join-section', 'meeting-section'];
+            sections.forEach(id => {
+                const element = document.getElementById(id);
+                if (id === sectionId) {
+                    element.classList.remove('hidden');
+                } else {
+                    element.classList.add('hidden');
+                }
+            });
+        }
+
+        // Helper: Toggles header/footers on active full-screen meeting states
+        function hideHeaderFooter(hide) {
+            const header = document.getElementById('main-header');
+            const footer = document.getElementById('main-footer');
+            if (hide) {
+                header.classList.add('hidden');
+                footer.classList.add('hidden');
+            } else {
+                header.classList.remove('hidden');
+                footer.classList.remove('hidden');
+            }
+        }
+
+        // Sidebar drawer panel helper
+        function toggleInfoSidebar() {
+            const sidebar = document.getElementById('info-sidebar');
+            sidebar.classList.toggle('hidden');
+        }
+
+        // Copy Clipboard Helper
+        function copyInviteLink() {
+            const inputField = document.getElementById('shareable-link-input');
+            inputField.select();
+            inputField.setSelectionRange(0, 99999); // Responsive mobile fix
+
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showToast('Classroom link copied to clipboard!', 'success');
+                } else {
+                    showToast('Unable to copy, copy manual instead', 'error');
+                }
+            } catch (err) {
+                showToast('Unable to copy', 'error');
+            }
+        }
+
+        function copyMeetingLink(inputId) {
+            const inputField = document.getElementById(inputId);
+            inputField.select();
+            inputField.setSelectionRange(0, 99999);
+
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showToast('Classroom link copied!', 'success');
+                }
+            } catch (err) {
+                showToast('Could not copy link', 'error');
+            }
+        }
+
+        // Web Share API support
+        async function shareInviteLink() {
+            const title = 'CRESCENTON Live Invitation';
+            const text = `Join my live classroom topic: ${currentRoomData ? currentRoomData.roomName : 'Active Session'}`;
+            const url = currentRoomData ? currentRoomData.shareLink : window.location.href;
+
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: title,
+                        text: text,
+                        url: url
+                    });
+                } catch (err) {
+                    // Fail silently or handle cancel action
+                }
+            } else {
+                // Clipboard copy fallback
+                const fallbackInput = currentRoomData ? currentRoomData.shareLink : window.location.href;
+                navigator.clipboard ? navigator.clipboard.writeText(fallbackInput) : null;
+                showToast('Shared: Link copied to clipboard (Web Share unsupported)', 'success');
+            }
+        }
+
+        // LOCALSTORAGE CLASSROOM HISTORY ENGINE
+        function saveToHistory(room) {
+            let history = [];
+            try {
+                const rawHistory = localStorage.getItem('crescenton_history');
+                if (rawHistory) {
+                    history = JSON.parse(rawHistory);
+                }
+            } catch(e) {
+                history = [];
+            }
+
+            // Avoid duplicating identical room records, push to front
+            history = history.filter(item => item.roomName !== room.roomName);
+            history.unshift(room);
+
+            // Limit history retention size
+            if (history.length > 8) history.pop();
+
+            try {
+                localStorage.setItem('crescenton_history', JSON.stringify(history));
+            } catch (e) {
+                // localstorage full
+            }
+        }
+
+        function deleteHistoryItem(index, event) {
+            event.stopPropagation(); // Avoid triggering click to load
+            try {
+                let history = JSON.parse(localStorage.getItem('crescenton_history')) || [];
+                history.splice(index, 1);
+                localStorage.setItem('crescenton_history', JSON.stringify(history));
+                renderClassroomHistory();
+                showToast('Classroom removed from log.', 'info');
+            } catch (e) {}
+        }
+
+        function clearHistory() {
+            localStorage.removeItem('crescenton_history');
+            renderClassroomHistory();
+            showToast('History cleared successfully.', 'info');
+        }
+
+        function loadHistoryClass(index) {
+            try {
+                const history = JSON.parse(localStorage.getItem('crescenton_history')) || [];
+                const selected = history[index];
+                if (selected) {
+                    currentRoomData = selected;
+                    
+                    // Populate UI configs
+                    document.getElementById('created-room-title').innerText = selected.roomName;
+                    
+                    const protectionBadge = document.getElementById('created-room-protection');
+                    if (selected.isProtected) {
+                        protectionBadge.className = "text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full flex items-center gap-1";
+                        protectionBadge.innerHTML = `<i data-lucide="lock" class="w-3.5 h-3.5"></i> Protected`;
+                    } else {
+                        protectionBadge.className = "text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full flex items-center gap-1";
+                        protectionBadge.innerHTML = `<i data-lucide="unlock" class="w-3.5 h-3.5"></i> Open Entry`;
+                    }
+                    
+                    document.getElementById('shareable-link-input').value = selected.shareLink;
+                    lucide.createIcons();
+                    
+                    showSection('created-section');
+                    showToast('Classroom profile retrieved!', 'info');
+                }
+            } catch(e) {}
+        }
+
+        function renderClassroomHistory() {
+            const container = document.getElementById('history-container');
+            let history = [];
+            
+            try {
+                const rawHistory = localStorage.getItem('crescenton_history');
+                if (rawHistory) {
+                    history = JSON.parse(rawHistory);
+                }
+            } catch(e) {
+                history = [];
+            }
+
+            if (!history || history.length === 0) {
+                container.innerHTML = `
+                    <div class="h-full flex flex-col items-center justify-center text-center p-8 text-slate-400 space-y-3">
+                        <div class="p-3 bg-slate-100 rounded-full">
+                            <i data-lucide="history" class="w-8 h-8 text-slate-400 stroke-[1.5]"></i>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-sm">No Recent Classrooms</p>
+                            <p class="text-xs">Your formulated live rooms will populate here.</p>
+                        </div>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            container.innerHTML = history.map((room, index) => {
+                return `
+                    <div onclick="loadHistoryClass(${index})" class="group cursor-pointer bg-slate-50 hover:bg-slate-100 border border-slate-200 hover:border-slate-300 rounded-2xl p-4 transition-all flex items-center justify-between">
+                        <div class="flex items-center space-x-3 overflow-hidden">
+                            <div class="bg-white p-2.5 rounded-xl border border-slate-200/80 text-brand-500 shadow-sm group-hover:bg-brand-50 group-hover:border-brand-100 group-hover:text-brand-600 transition-colors">
+                                <i data-lucide="video" class="w-5 h-5"></i>
+                            </div>
+                            <div class="overflow-hidden">
+                                <h4 class="font-bold text-sm text-slate-800 truncate">${room.roomName}</h4>
+                                <div class="flex items-center space-x-2 mt-0.5">
+                                    <span class="text-[10px] text-slate-400 font-mono truncate max-w-[150px]">${room.shareLink}</span>
+                                    ${room.isProtected ? '<span class="w-1 h-1 rounded-full bg-amber-400"></span><span class="text-[9px] text-amber-600 font-bold uppercase tracking-wider">Gate</span>' : ''}
+                                </div>
+                            </div>
+                        </div>
+                        <button onclick="deleteHistoryItem(${index}, event)" class="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition" title="Delete">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                `;
+            }).join('');
+
+            lucide.createIcons();
+        }
+
+
+        // TOAST NOTIFICATION MODULE
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            // Dynamic theme configurations for toast status
+            let icon = 'info';
+            let theme = 'bg-white text-slate-800 border-slate-200';
+            
+            if (type === 'success') {
+                icon = 'check-circle';
+                theme = 'bg-emerald-50 text-emerald-900 border-emerald-100';
+            } else if (type === 'error') {
+                icon = 'alert-triangle';
+                theme = 'bg-rose-50 text-rose-900 border-rose-100';
+            } else if (type === 'info') {
+                icon = 'info';
+                theme = 'bg-brand-50 text-brand-900 border-brand-100';
+            }
+
+            toast.className = `flex items-center space-x-3 ${theme} border p-4 rounded-2xl shadow-xl shadow-slate-200/50 pointer-events-auto transition-all duration-300 transform translate-y-2 opacity-0 font-medium text-sm`;
+            toast.innerHTML = `
+                <span class="flex-shrink-0">
+                    <i data-lucide="${icon}" class="w-5 h-5"></i>
+                </span>
+                <span class="flex-grow">${message}</span>
+            `;
+
+            container.appendChild(toast);
+            lucide.createIcons();
+
+            // Animate In
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            // Animate Out & Destroy
+            setTimeout(() => {
+                toast.classList.add('translate-y-2', 'opacity-0');
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }, 3500);
+        }
+    </script>
+</body>
+</html>
+
+```
