@@ -1,1 +1,17 @@
+<!DOCTYPE html>
+<html>
+<body style="margin:0">
+<div id="meet" style="width:100vw;height:100vh"></div>
 
+<script src="https://meet.jit.si/external_api.js"></script>
+
+<script>
+window.onload = () => {
+  new JitsiMeetExternalAPI("meet.jit.si", {
+    roomName: "CrescentonTest123",
+    parentNode: document.getElementById("meet")
+  });
+};
+</script>
+</body>
+</html>
