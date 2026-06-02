@@ -637,33 +637,11 @@
             // Instantiating Jitsi API Options
             const domain = 'meet.jit.si';
             const options = {
-                roomName: `CRESCENTON-${currentRoomData.roomName}`,
-                width: '100%',
-                height: '100%',
-                parentNode: container,
-                userInfo: {
-                    displayName: displayName
-                },
-                configOverwrite: {
-                    startWithAudioMuted: false,
-                    startWithVideoMuted: false,
-                    prejoinPageEnabled: false, // Bypass secondary Jitsi prejoin
-                    requireDisplayName: false,
-                    enableWelcomePage: false,
-                    disableThirdPartyRequests: true
-                },
-                interfaceConfigOverwrite: {
-                    MOBILE_APP_PROMPT: false, // Prevents redirection app prompts on mobile browsers
-                    TOOLBAR_BUTTONS: [
-                        'microphone', 'camera', 'closedcaptions', 'desktop', 'fullscreen',
-                        'fodeviceselection', 'hangup', 'profile', 'chat', 'recording',
-                        'livestreaming', 'etherpad', 'sharedvideo', 'settings', 'raisehand',
-                        'videoquality', 'filmstrip', 'invite', 'feedback', 'stats', 'shortcuts',
-                        'tileview', 'videobackgroundblur', 'download', 'help', 'mute-everyone',
-                        'security'
-                    ],
-                }
-            };
+    roomName: `CRESCENTON-${currentRoomData.roomName}`,
+    width: '100%',
+    height: '100%',
+    parentNode: container
+};
 
             // Initiate WebRTC meeting
             try {
